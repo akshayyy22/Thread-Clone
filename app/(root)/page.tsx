@@ -2,11 +2,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import ThreadCard from "@/components/cards/ThreadCard";
-import Pagination from "../../components/shared/Pagination";
-
+import Pagination from "@/components/shared/Pagination";
 
 import { fetchPosts } from "@/lib/actions/thread.actions";
-
 import { fetchUser } from "@/lib/actions/user.actions";
 
 async function Home({
@@ -14,12 +12,25 @@ async function Home({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
+  // Fetch the current user
   const user = await currentUser();
-  if (!user) return null;
 
+  // If user is not authenticated, redirect to /sign-in
+  if (!user) {
+    redirect("/sign-in");
+    return null;
+  }
+
+  // Fetch user information
   const userInfo = await fetchUser(user.id);
-  if (!userInfo?.onboarded) redirect("/onboarding");
+  
+  // If user is not onboarded, redirect to /onboarding
+  if (!userInfo?.onboarded) {
+    redirect("/onboarding");
+    return null;
+  }
 
+  // Fetch posts
   const result = await fetchPosts(
     searchParams.page ? +searchParams.page : 1,
     30
